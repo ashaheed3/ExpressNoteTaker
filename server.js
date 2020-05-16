@@ -1,8 +1,7 @@
 var express = require("express");
 var path = require("path"); 
 var fs = require("fs")
-var db = require("./db/db.json");
-var notes = {};
+var notes = [];
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -12,6 +11,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '/public')));
 
+// Read data from db.json and save to notes variable
 fs.readFile('./db/db.json', 'utf8', function(err, data){ 
   if (err){
     console.error(err);
@@ -20,37 +20,20 @@ fs.readFile('./db/db.json', 'utf8', function(err, data){
     notes = JSON.parse(data);
 });
     
-  // Display the file content 
-
-
-// Routes
-// =============================================================
-
-// Basic route that sends the user first to the AJAX Page
-
+  
 app.get("/notes", function(req, res) {
   res.sendFile(path.join(__dirname, "./public/notes.html"));
 });
 
 app.get("/api/notes", function(req, res){
-
-    // let test = {"id":[{"title":"Test Title","text":"Test text"}]}
-    // notes.push(test)
-  
-    res.json(notes)
-    
+    res.json(notes) 
 }); 
 
 app.post("/api/notes", function(req, res){
 
-  // let test = {"id":[{"title":"Test Title","text":"Test text"}]}
-  // notes.push(test)
   var newNote = req.body;
   notes.push(newNote);
-
   rewriteFile();
-
-
   res.json(newNote);
   
 });
@@ -59,17 +42,20 @@ app.delete("/api/notes/:id", function(req, res){
 
   var chosen = req.params.id;
 
-  if (notes[chosen] !== null){
-    delete notes[chosen];
+  for (let i = 0; i < notes.length; i++) {
+    if (notes[i].id == chosen){
+      notes.splice(i,1)
+    }
   }
 
   rewriteFile();
-
+  res.json("")
   
 });
 
 app.get("/*", function(req, res){
   res.sendFile(path.join(__dirname, "./public/index.html"));
+
 });
 
 
